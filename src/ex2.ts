@@ -165,7 +165,10 @@ app.post("/bookings", async (req: Request, res: Response) => {
     const booking = await Booking.create({ time, patientId, provider });
 
     // Record the initial status in the booking status history
-    await BookingStatusHistory.create({ status, bookingId: booking.id });
+    await BookingStatusHistory.create({
+      status: booking.status,
+      bookingId: booking.id,
+    });
 
     // Associate the booking with the credit
     await booking.setCredit(credit);
