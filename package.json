@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dot-env": "^0.0.1",
     "express": "^4.19.2",
     "sequelize": "^6.37.2"
   }
