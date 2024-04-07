@@ -3,10 +3,14 @@ import errorHandler from "./middleware/errorHandler";
 import bookingRoutes from "./routes/bookingRoutes";
 import bookingStatusHistoryRoutes from "./routes/bookingStatusHistoryRoutes";
 import creditRoutes from "./routes/creditRoutes";
+import apiRateLimit from "./middleware/rateLimit";
 
 const app: Application = express();
 
 app.use(express.json());
+
+// rate limiting middleware
+app.use(apiRateLimit);
 
 // routes
 app.use(bookingRoutes);
