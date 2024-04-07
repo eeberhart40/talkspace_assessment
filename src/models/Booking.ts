@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/sequelize";
 
-interface BookingAttributes {
+export interface BookingAttributes {
   id: number;
   time: Date;
   patientId: string | null;
