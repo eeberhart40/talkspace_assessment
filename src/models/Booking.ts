@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/sequelize";
+import Credit from "./Credit";
 
 export interface BookingAttributes {
   id: number;
@@ -20,6 +21,7 @@ class Booking
   public patientId!: string | null;
   public provider!: string;
   public status!: string;
+  public setCredit!: (credit: Credit) => Promise<void>; // Association method
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
