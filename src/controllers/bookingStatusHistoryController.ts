@@ -1,42 +1,21 @@
 import { Request, Response } from "express";
-import BookingStatusHistory from "../models/BookingStatusHistory";
+import { BookingStatusHistory } from "../models";
 
-// Add a new booking status history record
-export const addBookingStatusHistory = async (req: Request, res: Response) => {
+// Function to retrieve the booking status history for a specific booking
+export const getBookingHistoryById = async (req: Request, res: Response) => {
+  const { bookingId } = req.params;
   try {
-    const history = await BookingStatusHistory.create(req.body);
-    res.status(201).json(history);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// Retrieve all booking status history records
-export const getAllBookingStatusHistories = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const histories = await BookingStatusHistory.findAll();
-    res.json(histories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get booking status history by booking ID
-export const getHistoryByBookingId = async (req: Request, res: Response) => {
-  try {
-    const { bookingId } = req.params;
+    // Retrieve the booking status history from the database for the specified booking
     const history = await BookingStatusHistory.findAll({
       where: { bookingId },
+      order: [["timestamp", "ASC"]], // Order by timestamp in ascending order
     });
-    if (history) {
-      res.json(history);
-    } else {
-      res.status(404).json({ message: "No history found for this booking" });
-    }
+
+    res.status(200).json({ history });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error retrieving booking status history:", error);
+    res.status(500).json({
+      error: "An error occurred while retrieving booking status history.",
+    });
   }
 };
