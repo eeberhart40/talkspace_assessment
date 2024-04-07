@@ -6,6 +6,7 @@ import {
 
 const router = express.Router();
 
+// TODO: add validation schema and middleware
 router.post("/bookings", createBookingWithCredit);
 router.get("/bookings", getBookingsForUser);
 

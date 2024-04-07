@@ -27,6 +27,7 @@ class Booking
   public readonly updatedAt!: Date;
 }
 
+// TODO: custom validation for time attribute
 Booking.init(
   {
     id: {

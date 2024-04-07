@@ -4,6 +4,7 @@ import { ErrorResponse } from "../utils/errorUtils";
 import { Credit, Booking, BookingStatusHistory } from "../models";
 import { getBookingStatusChangeStats } from "../utils/statistics";
 
+// TODO: db transactions, particularly for createBookingWithCredit
 // Function to create a booking with an unused credit
 export const createBookingWithCredit = async (
   req: Request,

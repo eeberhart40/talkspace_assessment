@@ -10,6 +10,7 @@ if (
   throw new Error("Database configuration environment variables are missing");
 }
 
+// TODO: db pooling
 // Create a single persistent MySQL database connection pool
 const sequelize = new Sequelize(
   process.env.DB_NAME,
