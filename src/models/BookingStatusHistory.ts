@@ -4,7 +4,7 @@ import sequelize from "../config/sequelize";
 interface BookingStatusHistoryAttributes {
   id: number;
   status: string;
-  timestamp: Date;
+  timestamp?: Date;
   bookingId: number;
 }
 
@@ -43,6 +43,7 @@ BookingStatusHistory.init(
     timestamp: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
       validate: {
         isDate: true,
       },
