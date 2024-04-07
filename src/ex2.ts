@@ -29,7 +29,7 @@ Booking.hasMany(BookingStatusHistory);
 BookingStatusHistory.belongsTo(Booking);
 
 // Function to get statistics on canceled and rescheduled bookings for a specific provider
-async function getStats(providerId: string) {
+async function getBookingStatusChangeStats(providerId: string) {
   try {
     // Retrieve canceled and rescheduled bookings for the specified provider
     const stats = await Booking.findAll({
@@ -77,7 +77,7 @@ async function getStats(providerId: string) {
 }
 
 // Function to get monthly statistics on credits used by a specific patient, including the percentage
-async function getCreditsUsedStats(patientId: string) {
+async function getMonthlyCreditUsageStats(patientId: string) {
   try {
     // Retrieve total credits available for the specified patient
     const totalCreditsQuery = await Credit.sum("type", {
@@ -201,7 +201,8 @@ app.get("/bookings", async (req: Request, res: Response) => {
     });
 
     let stats = [];
-    if (bookings?.[0].provider === userId) stats = await getStats(userId);
+    if (bookings?.[0].provider === userId)
+      stats = await getBookingStatusChangeStats(userId);
 
     res.status(200).json({ bookings, stats });
   } catch (error) {
@@ -242,7 +243,7 @@ app.get("/credits/:patientId", async (req: Request, res: Response) => {
       },
     });
     // Retrieve the monthly credits used statistics from the database for the specified patient
-    const stats = await getCreditsUsedStats(patientId);
+    const stats = await getMonthlyCreditUsageStats(patientId);
 
     res.status(200).json({ credits, stats });
   } catch (error) {
