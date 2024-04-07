@@ -33,7 +33,8 @@ interface CreditAttributes {
   id: number;
   type: string;
   expirationDate: Date;
-  BookingId: number | null;
+  bookingId: number | null;
+  patientId: string | null;
 }
 
 type CreditCreationAttributes = Optional<CreditAttributes, "id">;
@@ -46,7 +47,8 @@ class Credit
   public id!: number;
   public type!: string;
   public expirationDate!: Date;
-  public BookingId!: number;
+  public bookingId!: number;
+  public patientId!: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -71,8 +73,12 @@ Credit.init(
         isAfter: new Date().toISOString(),
       },
     },
-    BookingId: {
+    bookingId: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    patientId: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
   },
@@ -85,7 +91,7 @@ Credit.init(
 interface BookingAttributes {
   id: number;
   time: Date;
-  patient: string | null;
+  patientId: string | null;
   provider: string;
   status: string;
 }
@@ -98,7 +104,7 @@ class Booking
 {
   public id!: number;
   public time!: Date;
-  public patient!: string | null;
+  public patientId!: string | null;
   public provider!: string;
   public status!: string;
 
@@ -121,7 +127,7 @@ Booking.init(
         isAfter: new Date().toISOString(),
       },
     },
-    patient: {
+    patientId: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -145,7 +151,7 @@ interface BookingStatusHistoryAttributes {
   id: number;
   status: string;
   timestamp: Date;
-  BookingId: number;
+  bookingId: number;
 }
 
 type BookingStatusHistoryCreationAttributes = Optional<
@@ -163,7 +169,7 @@ class BookingStatusHistory
   public id!: number;
   public status!: string;
   public timestamp!: Date;
-  public BookingId!: number;
+  public bookingId!: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -187,7 +193,7 @@ BookingStatusHistory.init(
         isDate: true,
       },
     },
-    BookingId: {
+    bookingId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -273,7 +279,7 @@ async function getCreditsUsedStats(patientId: string) {
     // Retrieve total credits available for the specified patient
     const totalCreditsQuery = await Credit.sum("type", {
       where: {
-        BookingId: null, // Credits not associated with any booking
+        bookingId: null, // Credits not associated with any booking
       },
     });
 
@@ -302,7 +308,7 @@ async function getCreditsUsedStats(patientId: string) {
         },
       ],
       where: {
-        patient: patientId,
+        patientId,
         status: "confirmed",
       },
       group: ["month", "year"],
@@ -332,7 +338,7 @@ async function getCreditsUsedStats(patientId: string) {
 
 // Endpoint to create a booking with an unused credit
 app.post("/bookings", async (req: Request, res: Response) => {
-  const { time, patient, provider } = req.body;
+  const { time, patientId, provider } = req.body;
 
   try {
     // Find an unused credit that is not expired
@@ -342,7 +348,7 @@ app.post("/bookings", async (req: Request, res: Response) => {
         expirationDate: {
           [sequelize.Op.gt]: d, // Expiration date is greater than the current date
         },
-        BookingId: null, // Credit is not associated with any booking
+        bookingId: null, // Credit is not associated with any booking
       },
     });
 
@@ -353,10 +359,10 @@ app.post("/bookings", async (req: Request, res: Response) => {
     }
 
     // Create a booking associated with the credit
-    const booking = await Booking.create({ time, patient, provider });
+    const booking = await Booking.create({ time, patientId, provider });
 
     // Record the initial status in the booking status history
-    await BookingStatusHistory.create({ status, BookingId: booking.id });
+    await BookingStatusHistory.create({ status, bookingId: booking.id });
 
     // Associate the booking with the credit
     await booking.setCredit(credit);
@@ -373,7 +379,7 @@ app.post("/bookings", async (req: Request, res: Response) => {
   }
 });
 
-// Endpoint to retrieve bookings for a specific user (patient or provider)
+// Endpoint to retrieve bookings for a specific user (patientId or provider)
 app.get("/bookings", async (req: Request, res: Response) => {
   const { userId } = req.query;
 
@@ -387,7 +393,7 @@ app.get("/bookings", async (req: Request, res: Response) => {
     // Retrieve bookings from the database for the specified user
     const bookings = await Booking.findAll({
       where: {
-        [sequelize.Op.or]: [{ patient: userId }, { provider: userId }],
+        [sequelize.Op.or]: [{ patientId: userId }, { provider: userId }],
       },
     });
 
@@ -409,7 +415,7 @@ app.get("/bookings/:bookingId/history", async (req: Request, res: Response) => {
   try {
     // Retrieve the booking status history from the database for the specified booking
     const history = await BookingStatusHistory.findAll({
-      where: { BookingId: bookingId },
+      where: { bookingId },
       order: [["timestamp", "ASC"]], // Order by timestamp in ascending order
     });
 
@@ -429,7 +435,7 @@ app.get("/credits/:patientId", async (req: Request, res: Response) => {
     // get credits for the specified patient
     const credits = await Credit.findAll({
       where: {
-        patient: patientId,
+        patientId,
       },
     });
     // Retrieve the monthly credits used statistics from the database for the specified patient
