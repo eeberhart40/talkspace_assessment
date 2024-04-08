@@ -7,12 +7,17 @@ export const getBookingHistoryById = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { bookingId } = req.params;
-  // Retrieve the booking status history from the database for the specified booking
-  const history = await BookingStatusHistory.findAll({
-    where: { bookingId },
-    order: [["timestamp", "ASC"]], // Order by timestamp in ascending order
-  }).catch(next);
+  try {
+    const { bookingId } = req.params;
+    // Retrieve the booking status history from the database for the specified booking
+    const history = await BookingStatusHistory.findAll({
+      where: { bookingId },
+      order: [["timestamp", "ASC"]], // Order by timestamp in ascending order
+    });
 
-  res.status(200).json({ history });
+    res.status(200).json({ history });
+  } catch (error) {
+    // Pass to express error handling middleware
+    next(error);
+  }
 };

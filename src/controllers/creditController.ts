@@ -8,15 +8,20 @@ export const getCreditsForPatient = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { patientId } = req.params;
+  try {
+    const { patientId } = req.params;
 
-  // get credits for the specified patient
-  const credits = await Credit.findAll({
-    where: { patientId },
-  }).catch(next);
+    // Get credits for the specified patient
+    const credits = await Credit.findAll({
+      where: { patientId },
+    });
 
-  // Retrieve the monthly credits used statistics from the database for the specified patient
-  const stats = await getMonthlyCreditUsageStats(patientId).catch(next);
+    // Retrieve the monthly credits used statistics for the specified patient
+    const stats = await getMonthlyCreditUsageStats(patientId);
 
-  res.status(200).json({ credits, stats });
+    res.status(200).json({ credits, stats });
+  } catch (error) {
+    // Pass errors to Express error handling middleware
+    next(error);
+  }
 };

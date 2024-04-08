@@ -11,40 +11,40 @@ export const createBookingWithCredit = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { time, patientId, provider } = req.body;
+  try {
+    const { time, patientId, provider } = req.body;
 
-  const credit = await Credit.findOne({
-    where: {
-      expirationDate: {
-        [Sequelize.Op.gt]: new Date(),
+    const credit = await Credit.findOne({
+      where: {
+        expirationDate: {
+          [Sequelize.Op.gt]: new Date(),
+        },
+        bookingId: null,
       },
-      bookingId: null,
-    },
-  });
+    });
 
-  if (!credit) {
-    return next(
-      new ErrorResponse("No unused, non-expired credits found.", 404)
-    );
+    if (!credit) {
+      throw new ErrorResponse("No unused, non-expired credits found.", 404);
+    }
+
+    const booking = await Booking.create({ time, patientId, provider });
+
+    await BookingStatusHistory.create({
+      status: "initial",
+      bookingId: booking.id,
+    });
+
+    // Associate the booking with the credit
+    await booking.setCredit(credit);
+    await credit.update({ bookingId: booking.id });
+
+    res.status(201).json({
+      message: "Booking created successfully",
+      booking,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const booking = await Booking.create({ time, patientId, provider }).catch(
-    next
-  );
-
-  await BookingStatusHistory.create({
-    status: "initial",
-    bookingId: booking.id,
-  }).catch(next);
-
-  // Associate the booking with the credit
-  await booking.setCredit(credit).catch(next);
-  await credit.update({ bookingId: booking.id }).catch(next);
-
-  res.status(201).json({
-    message: "Booking created successfully",
-    booking,
-  });
 };
 
 // Function to retrieve bookings for a specific user (patientId or provider)
@@ -69,9 +69,7 @@ export const getBookingsForUser = async (
   }).catch(next);
 
   // Fetch booking status change statistics for the user
-  const statusChangeStats = await getBookingStatusChangeStats(userId).catch(
-    next
-  );
+  const stats = await getBookingStatusChangeStats(userId).catch(next);
 
-  res.status(200).json({ bookings, statusChangeStats });
+  res.status(200).json({ bookings, stats });
 };
